@@ -1,0 +1,25 @@
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.vscode/
+*.suo
+*.sln
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nuget.props
+*.nuget.targets
+packages/
+!package-lock.json
+
+# appsettings
+appsettings.Development.json
+
+# Tests
+*.testsettings
+.vsmdi
+*.testlog
