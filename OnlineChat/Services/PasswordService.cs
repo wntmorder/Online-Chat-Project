@@ -24,6 +24,7 @@ namespace OnlineChat.Services
 
         public (string hashedPassword, string salt) HashPassword(string password)
         {
+            // Generate a random salt
             byte[] saltBytes = new byte[16];
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
@@ -31,9 +32,13 @@ namespace OnlineChat.Services
             }
             string salt = Convert.ToBase64String(saltBytes);
 
+            // Hash the password with the salt
             using SHA256 sha256 = SHA256.Create();
-            byte[] passwordBytes = Encoding.UTF8.GetBytes(password + salt);
-            byte[] hashedPasswordBytes = sha256.ComputeHash(passwordBytes);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            byte[] saltedPasswordBytes = new byte[passwordBytes.Length + saltBytes.Length];
+            Buffer.BlockCopy(passwordBytes, 0, saltedPasswordBytes, 0, passwordBytes.Length);
+            Buffer.BlockCopy(saltBytes, 0, saltedPasswordBytes, passwordBytes.Length, saltBytes.Length);
+            byte[] hashedPasswordBytes = sha256.ComputeHash(saltedPasswordBytes);
             string hashedPassword = Convert.ToBase64String(hashedPasswordBytes);
 
             return (hashedPassword, salt);
@@ -41,11 +46,21 @@ namespace OnlineChat.Services
 
         public bool VerifyPassword(string password, string hashedPassword, string salt)
         {
+            // Convert the provided password to bytes
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+
+            // Combine the password bytes with the salt bytes
+            byte[] saltBytes = Convert.FromBase64String(salt);
+            byte[] saltedPasswordBytes = new byte[passwordBytes.Length + saltBytes.Length];
+            Buffer.BlockCopy(passwordBytes, 0, saltedPasswordBytes, 0, passwordBytes.Length);
+            Buffer.BlockCopy(saltBytes, 0, saltedPasswordBytes, passwordBytes.Length, saltBytes.Length);
+
+            // Compute the hash of the combined bytes
             using SHA256 sha256 = SHA256.Create();
-            byte[] passwordBytes = Encoding.UTF8.GetBytes(password + salt);
-            byte[] hashedPasswordBytes = sha256.ComputeHash(passwordBytes);
+            byte[] hashedPasswordBytes = sha256.ComputeHash(saltedPasswordBytes);
             string hashedPasswordAttempt = Convert.ToBase64String(hashedPasswordBytes);
 
+            // Compare the computed hash with the stored hashed password
             return hashedPasswordAttempt == hashedPassword;
         }
 

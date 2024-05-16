@@ -25,5 +25,9 @@
   <ItemGroup>
     <ProjectReference Include="..\OnlineChat\OnlineChat.csproj" />
   </ItemGroup>
+	
+	<ItemGroup>
+	    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.4" />
+    </ItemGroup>
 
 </Project>
