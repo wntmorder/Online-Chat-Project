@@ -81,7 +81,7 @@ namespace OnlineChat.Controllers
             }
 
             // Find user by email or username
-            User? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.EmailOrUsername || u.Username == model.EmailOrUsername);
+            User? user = await _dbContext.Users.SingleOrDefaultAsync(u => u.Email == model.EmailOrUsername || u.Username == model.EmailOrUsername);
             if (user == null)
             {
                 return NotFound("User not found");

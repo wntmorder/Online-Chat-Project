@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using OnlineChat.Data;
+using OnlineChat.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -14,9 +15,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ChatDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register PasswordService
+builder.Services.AddScoped<PasswordService>();
+
 // Add connection configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options => //CookieAuthenticationOptions
+                .AddCookie(options => // CookieAuthenticationOptions
                     options.LoginPath = new PathString("/Account/Login"));
 
 WebApplication app = builder.Build();
