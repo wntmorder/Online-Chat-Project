@@ -1,30 +1,39 @@
-﻿using System.Text;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
+using System.Text;
 
 namespace OnlineChat.Services
 {
+    /// <summary>
+    /// Service for password hashing and encryption/decryption operations.
+    /// </summary>
     public class PasswordService
     {
-        private readonly byte[] _key = GenerateKey(16);
-        private readonly byte[] _iv = GenerateIV(16);
+        private readonly byte[] _key;
+        private readonly byte[] _iv;
 
-        private static byte[] GenerateKey(int keySize)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordService"/> class with specified encryption key and IV.
+        /// </summary>
+        /// <param name="key">Encryption key in hexadecimal format.</param>
+        /// <param name="iv">Initialization vector in hexadecimal format.</param>
+        public PasswordService(string key, string iv)
         {
-            byte[] key = new byte[keySize];
-            RandomNumberGenerator.Fill(key);
-            return key;
+            _key = Convert.FromHexString(key);
+            _iv = Convert.FromHexString(iv);
+
+            if (_key.Length != 16 || _iv.Length != 16)
+            {
+                throw new ArgumentException("Key and IV must be 16 bytes (128 bits) long.");
+            }
         }
 
-        private static byte[] GenerateIV(int ivSize)
-        {
-            byte[] iv = new byte[ivSize];
-            RandomNumberGenerator.Fill(iv);
-            return iv;
-        }
-
+        /// <summary>
+        /// Hashes the specified password using SHA-256 and generates a salt.
+        /// </summary>
+        /// <param name="password">The password to hash.</param>
+        /// <returns>A tuple containing the hashed password and the salt used for hashing.</returns>
         public (string hashedPassword, string salt) HashPassword(string password)
         {
-            // Generate a random salt
             byte[] saltBytes = new byte[16];
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
@@ -32,7 +41,6 @@ namespace OnlineChat.Services
             }
             string salt = Convert.ToBase64String(saltBytes);
 
-            // Hash the password with the salt
             using SHA256 sha256 = SHA256.Create();
             byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
             byte[] saltedPasswordBytes = new byte[passwordBytes.Length + saltBytes.Length];
@@ -44,26 +52,33 @@ namespace OnlineChat.Services
             return (hashedPassword, salt);
         }
 
+        /// <summary>
+        /// Verifies the specified password against the given hashed password and salt.
+        /// </summary>
+        /// <param name="password">The password to verify.</param>
+        /// <param name="hashedPassword">The hashed password to verify against.</param>
+        /// <param name="salt">The salt used for hashing the password.</param>
+        /// <returns><c>true</c> if the password matches the hashed password; otherwise, <c>false</c>.</returns>
         public bool VerifyPassword(string password, string hashedPassword, string salt)
         {
-            // Convert the provided password to bytes
             byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-
-            // Combine the password bytes with the salt bytes
             byte[] saltBytes = Convert.FromBase64String(salt);
             byte[] saltedPasswordBytes = new byte[passwordBytes.Length + saltBytes.Length];
             Buffer.BlockCopy(passwordBytes, 0, saltedPasswordBytes, 0, passwordBytes.Length);
             Buffer.BlockCopy(saltBytes, 0, saltedPasswordBytes, passwordBytes.Length, saltBytes.Length);
 
-            // Compute the hash of the combined bytes
             using SHA256 sha256 = SHA256.Create();
             byte[] hashedPasswordBytes = sha256.ComputeHash(saltedPasswordBytes);
             string hashedPasswordAttempt = Convert.ToBase64String(hashedPasswordBytes);
 
-            // Compare the computed hash with the stored hashed password
             return hashedPasswordAttempt == hashedPassword;
         }
 
+        /// <summary>
+        /// Encrypts the specified plain text using AES encryption.
+        /// </summary>
+        /// <param name="plainText">The plain text to encrypt.</param>
+        /// <returns>The encrypted text in base64 format.</returns>
         public string EncryptString(string plainText)
         {
             using Aes aesAlg = Aes.Create();
@@ -80,25 +95,38 @@ namespace OnlineChat.Services
             }
 
             byte[] encrypted = msEncrypt.ToArray();
-
             return Convert.ToBase64String(encrypted);
         }
 
+        /// <summary>
+        /// Decrypts the specified cipher text using AES decryption.
+        /// </summary>
+        /// <param name="cipherText">The cipher text to decrypt.</param>
+        /// <returns>The decrypted plain text.</returns>
+        /// <exception cref="CryptographicException">Thrown when decryption fails.</exception>
         public string DecryptString(string cipherText)
         {
             byte[] cipherTextBytes = Convert.FromBase64String(cipherText);
 
-            using Aes aesAlg = Aes.Create();
-            aesAlg.Key = _key;
-            aesAlg.IV = _iv;
+            try
+            {
+                using Aes aesAlg = Aes.Create();
+                aesAlg.Key = _key;
+                aesAlg.IV = _iv;
 
-            ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
-            using MemoryStream msDecrypt = new(cipherTextBytes);
-            using CryptoStream csDecrypt = new(msDecrypt, decryptor, CryptoStreamMode.Read);
-            using StreamReader srDecrypt = new(csDecrypt);
+                using MemoryStream msDecrypt = new(cipherTextBytes);
+                using CryptoStream csDecrypt = new(msDecrypt, decryptor, CryptoStreamMode.Read);
+                using StreamReader srDecrypt = new(csDecrypt);
 
-            return srDecrypt.ReadToEnd();
+                return srDecrypt.ReadToEnd();
+            }
+            catch (CryptographicException ex)
+            {
+                Console.WriteLine($"Decryption failed: {ex.Message}");
+                throw;
+            }
         }
     }
 }

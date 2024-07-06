@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace OnlineChat.Models
 {
@@ -14,6 +15,7 @@ namespace OnlineChat.Models
 
         public string? ChatId { get; set; }
 
+        [JsonIgnore]
         public Chat? Chat { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -1,18 +1,32 @@
-﻿using OnlineChat.Services;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace OnlineChat.Tests
 {
     public class PasswordServiceTests
     {
+        private readonly PasswordService _passwordService;
+
+        public PasswordServiceTests()
+        {
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.Test.json")
+                .Build();
+
+            IConfigurationSection encryptionSettings = configuration.GetSection("EncryptionSettings");
+            string? key = encryptionSettings["Key"];
+            string? iv = encryptionSettings["IV"];
+
+            _passwordService = new PasswordService(key, iv);
+        }
+
         [Fact]
         public void HashPassword_ReturnsNonNullValues()
         {
             // Arrange
-            PasswordService service = new();
-            string password = "password";
+            string? password = "password";
 
             // Act
-            (string hashedPassword, string salt) = service.HashPassword(password);
+            (string hashedPassword, string salt) = _passwordService.HashPassword(password);
 
             // Assert
             Assert.NotNull(hashedPassword);
@@ -23,12 +37,11 @@ namespace OnlineChat.Tests
         public void VerifyPassword_ReturnsTrueForCorrectPassword()
         {
             // Arrange
-            PasswordService service = new();
-            string password = "password";
-            (string hashedPassword, string salt) = service.HashPassword(password);
+            string? password = "password";
+            (string hashedPassword, string salt) = _passwordService.HashPassword(password);
 
             // Act
-            bool result = service.VerifyPassword(password, hashedPassword, salt);
+            bool result = _passwordService.VerifyPassword(password, hashedPassword, salt);
 
             // Assert
             Assert.True(result);
@@ -38,11 +51,10 @@ namespace OnlineChat.Tests
         public void EncryptString_ReturnsEncryptedString()
         {
             // Arrange
-            PasswordService service = new();
-            string plainText = "Hello, World!";
+            string? plainText = "Hello, World!";
 
             // Act
-            string encryptedString = service.EncryptString(plainText);
+            string? encryptedString = _passwordService.EncryptString(plainText);
 
             // Assert
             Assert.NotEmpty(encryptedString);
@@ -53,12 +65,11 @@ namespace OnlineChat.Tests
         public void DecryptString_ReturnsDecryptedString()
         {
             // Arrange
-            PasswordService service = new();
-            string plainText = "Hello, World!";
-            string encryptedString = service.EncryptString(plainText);
+            string? plainText = "Hello, World!";
+            string? encryptedString = _passwordService.EncryptString(plainText);
 
             // Act
-            string decryptedString = service.DecryptString(encryptedString);
+            string? decryptedString = _passwordService.DecryptString(encryptedString);
 
             // Assert
             Assert.Equal(plainText, decryptedString);

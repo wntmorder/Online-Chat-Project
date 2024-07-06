@@ -96,5 +96,59 @@ namespace OnlineChat.Controllers
             // Successful authentication
             return Ok("User logged in successfully");
         }
+
+        /// <summary>
+        /// Updates the user account details.
+        /// </summary>
+        /// <param name="userId">The ID of the user to update.</param>
+        /// <param name="model">The model containing updated user details.</param>
+        /// <returns>ActionResult with status 200 if successful, or 400 if model is invalid.</returns>
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateAccount(string userId, UpdateAccountModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            User? user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.Email = model.Email ?? user.Email;
+            user.Username = model.Username ?? user.Username;
+
+            if (model.Password != null)
+            {
+                (string hashedPassword, string salt) = _passwordService.HashPassword(model.Password);
+                user.PasswordHash = hashedPassword;
+                user.Salt = salt;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return Ok("Account updated successfully");
+        }
+
+        /// <summary>
+        /// Deletes a user by ID.
+        /// </summary>
+        /// <param name="userId">The ID of the user to delete.</param>
+        /// <returns>ActionResult with status 200 if successful, or 404 if user not found.</returns>
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            User? user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            _dbContext.Users.Remove(user);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok("User deleted successfully");
+        }
     }
 }
