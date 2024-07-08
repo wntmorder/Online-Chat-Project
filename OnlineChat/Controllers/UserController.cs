@@ -12,15 +12,15 @@ namespace OnlineChat.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountController : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly ChatDbContext _dbContext;
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
 
-        public AccountController(ChatDbContext dbContext, PasswordService passwordService)
+        public UserController(ChatDbContext dbContext, EncryptionService encryptionService)
         {
             _dbContext = dbContext;
-            _passwordService = passwordService;
+            _encryptionService = encryptionService;
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace OnlineChat.Controllers
             {
                 return BadRequest("Password is required");
             }
-            (string hashedPassword, string salt) = _passwordService.HashPassword(model.Password);
+            (string hashedPassword, string salt) = _encryptionService.HashPassword(model.Password);
             User user = new()
             {
                 Email = model.Email,
@@ -88,7 +88,7 @@ namespace OnlineChat.Controllers
             }
 
             // Check password
-            if (!_passwordService.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
+            if (!_encryptionService.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
             {
                 return Unauthorized("Invalid email/username or password");
             }
@@ -104,7 +104,7 @@ namespace OnlineChat.Controllers
         /// <param name="model">The model containing updated user details.</param>
         /// <returns>ActionResult with status 200 if successful, or 400 if model is invalid.</returns>
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateAccount(string userId, UpdateAccountModel model)
+        public async Task<IActionResult> UpdateAccount(string userId, UpdateUserModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -122,7 +122,7 @@ namespace OnlineChat.Controllers
 
             if (model.Password != null)
             {
-                (string hashedPassword, string salt) = _passwordService.HashPassword(model.Password);
+                (string hashedPassword, string salt) = _encryptionService.HashPassword(model.Password);
                 user.PasswordHash = hashedPassword;
                 user.Salt = salt;
             }

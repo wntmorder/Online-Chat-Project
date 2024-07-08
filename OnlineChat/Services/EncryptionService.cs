@@ -6,17 +6,17 @@ namespace OnlineChat.Services
     /// <summary>
     /// Service for password hashing and encryption/decryption operations.
     /// </summary>
-    public class PasswordService
+    public class EncryptionService
     {
         private readonly byte[] _key;
         private readonly byte[] _iv;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PasswordService"/> class with specified encryption key and IV.
+        /// Initializes a new instance of the <see cref="EncryptionService"/> class with specified encryption key and IV.
         /// </summary>
         /// <param name="key">Encryption key in hexadecimal format.</param>
         /// <param name="iv">Initialization vector in hexadecimal format.</param>
-        public PasswordService(string key, string iv)
+        public EncryptionService(string key, string iv)
         {
             _key = Convert.FromHexString(key);
             _iv = Convert.FromHexString(iv);

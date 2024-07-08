@@ -15,12 +15,12 @@ namespace OnlineChat.Controllers
     public class ChatsController : ControllerBase
     {
         private readonly ChatDbContext _dbContext;
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
 
-        public ChatsController(ChatDbContext dbContext, PasswordService passwordService)
+        public ChatsController(ChatDbContext dbContext, EncryptionService encryptionService)
         {
             _dbContext = dbContext;
-            _passwordService = passwordService;
+            _encryptionService = encryptionService;
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace OnlineChat.Controllers
                 messages.Add(new MessageViewModel
                 {
                     MessageId = message.MessageId,
-                    MessageText = _passwordService.DecryptString(message.MessageText),
+                    MessageText = _encryptionService.DecryptString(message.MessageText),
                     SenderId = message.SenderId,
                     SenderUsername = message.Sender?.Username,
                     ChatId = message.ChatId,

@@ -1,14 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
-using OnlineChat.Controllers;
 
 namespace OnlineChat.Tests
 {
-    public class AccountControllerTests
+    public class UserControllerTests
     {
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
         private readonly ChatDbContext _dbContext;
 
-        public AccountControllerTests()
+        public UserControllerTests()
         {
             DbContextOptions<ChatDbContext> options = new DbContextOptionsBuilder<ChatDbContext>()
                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -25,13 +24,13 @@ namespace OnlineChat.Tests
             string? key = encryptionSettings["Key"];
             string? iv = encryptionSettings["IV"];
 
-            _passwordService = new PasswordService(key, iv);
+            _encryptionService = new EncryptionService(key, iv);
         }
 
         [Fact]
         public async Task Register_ValidModel_ReturnsOkResult()
         {
-            AccountController controller = new(_dbContext, _passwordService);
+            UserController controller = new(_dbContext, _encryptionService);
             RegisterModel registerModel = new()
             {
                 Email = "test@example.com",
@@ -48,8 +47,8 @@ namespace OnlineChat.Tests
         [Fact]
         public async Task Login_ValidModel_ReturnsOkResult()
         {
-            AccountController controller = new(_dbContext, _passwordService);
-            (string hashedPassword, string salt) hashedPasswordResult = _passwordService.HashPassword("TestPassword");
+            UserController controller = new(_dbContext, _encryptionService);
+            (string hashedPassword, string salt) hashedPasswordResult = _encryptionService.HashPassword("TestPassword");
             User user = new()
             {
                 Email = "test@example.com",
@@ -73,8 +72,8 @@ namespace OnlineChat.Tests
         [Fact]
         public async Task UpdateAccount_ValidModel_ReturnsOkResult()
         {
-            AccountController controller = new(_dbContext, _passwordService);
-            (string hashedPassword, string salt) hashedPasswordResult = _passwordService.HashPassword("TestPassword");
+            UserController controller = new(_dbContext, _encryptionService);
+            (string hashedPassword, string salt) hashedPasswordResult = _encryptionService.HashPassword("TestPassword");
 
             User user = new()
             {
@@ -87,7 +86,7 @@ namespace OnlineChat.Tests
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            UpdateAccountModel model = new()
+            UpdateUserModel model = new()
             {
                 Email = "new@example.com",
                 Username = "newusername",
@@ -105,8 +104,8 @@ namespace OnlineChat.Tests
         public async Task DeleteUser_ExistingUserId_ReturnsOkResult()
         {
             // Arrange
-            AccountController controller = new(_dbContext, _passwordService);
-            (string hashedPassword, string salt) hashedPasswordResult = _passwordService.HashPassword("TestPassword");
+            UserController controller = new(_dbContext, _encryptionService);
+            (string hashedPassword, string salt) hashedPasswordResult = _encryptionService.HashPassword("TestPassword");
             User user = new()
             {
                 Email = "test@example.com",
@@ -117,7 +116,7 @@ namespace OnlineChat.Tests
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            AccountController _controller = new AccountController(_dbContext, _passwordService);
+            UserController _controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await _controller.DeleteUser(user.UserId);
@@ -134,7 +133,7 @@ namespace OnlineChat.Tests
         public async Task DeleteUser_NonExistingUserId_ReturnsNotFoundResult()
         {
             // Arrange
-            AccountController controller = new AccountController(_dbContext, _passwordService);
+            UserController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.DeleteUser("NonExistingUserId");

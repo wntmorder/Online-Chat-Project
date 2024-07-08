@@ -13,6 +13,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.WriteIndented = true;
     });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -37,10 +38,17 @@ if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(iv))
     throw new InvalidOperationException("Encryption settings (Key and IV) must be specified in the configuration.");
 }
 
-// Add PasswordService
-builder.Services.AddSingleton(new PasswordService(key, iv));
+// Add EncryptionService
+builder.Services.AddSingleton(new EncryptionService(key, iv));
 
 WebApplication app = builder.Build();
+
+// Apply migrations at startup
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    ChatDbContext dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

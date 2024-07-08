@@ -1,6 +1,6 @@
 ﻿namespace OnlineChat.ViewModels
 {
-    public class UpdateAccountModel
+    public class UpdateUserModel
     {
         public string? Email { get; set; }
         public string? Username { get; set; }

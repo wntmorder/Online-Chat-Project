@@ -15,12 +15,12 @@ namespace OnlineChat.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly ChatDbContext _dbContext;
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
 
-        public MessagesController(ChatDbContext dbContext, PasswordService passwordService)
+        public MessagesController(ChatDbContext dbContext, EncryptionService encryptionService)
         {
             _dbContext = dbContext;
-            _passwordService = passwordService;
+            _encryptionService = encryptionService;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace OnlineChat.Controllers
                 return BadRequest(ModelState);
             }
 
-            string encryptedMessageText = _passwordService.EncryptString(model.MessageText);
+            string encryptedMessageText = _encryptionService.EncryptString(model.MessageText);
 
             Message message = new()
             {
@@ -69,7 +69,7 @@ namespace OnlineChat.Controllers
                 return NotFound();
             }
 
-            string decryptedMessageText = _passwordService.DecryptString(message.MessageText);
+            string decryptedMessageText = _encryptionService.DecryptString(message.MessageText);
 
             var result = new
             {
@@ -104,7 +104,7 @@ namespace OnlineChat.Controllers
                 return NotFound("Message not found");
             }
 
-            message.MessageText = _passwordService.EncryptString(model.MessageText);
+            message.MessageText = _encryptionService.EncryptString(model.MessageText);
 
             await _dbContext.SaveChangesAsync();
             return Ok("Message updated successfully");

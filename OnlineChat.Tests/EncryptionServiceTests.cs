@@ -2,11 +2,11 @@
 
 namespace OnlineChat.Tests
 {
-    public class PasswordServiceTests
+    public class EncryptionServiceTests
     {
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
 
-        public PasswordServiceTests()
+        public EncryptionServiceTests()
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.Test.json")
@@ -16,7 +16,7 @@ namespace OnlineChat.Tests
             string? key = encryptionSettings["Key"];
             string? iv = encryptionSettings["IV"];
 
-            _passwordService = new PasswordService(key, iv);
+            _encryptionService = new EncryptionService(key, iv);
         }
 
         [Fact]
@@ -26,7 +26,7 @@ namespace OnlineChat.Tests
             string? password = "password";
 
             // Act
-            (string hashedPassword, string salt) = _passwordService.HashPassword(password);
+            (string hashedPassword, string salt) = _encryptionService.HashPassword(password);
 
             // Assert
             Assert.NotNull(hashedPassword);
@@ -38,10 +38,10 @@ namespace OnlineChat.Tests
         {
             // Arrange
             string? password = "password";
-            (string hashedPassword, string salt) = _passwordService.HashPassword(password);
+            (string hashedPassword, string salt) = _encryptionService.HashPassword(password);
 
             // Act
-            bool result = _passwordService.VerifyPassword(password, hashedPassword, salt);
+            bool result = _encryptionService.VerifyPassword(password, hashedPassword, salt);
 
             // Assert
             Assert.True(result);
@@ -54,7 +54,7 @@ namespace OnlineChat.Tests
             string? plainText = "Hello, World!";
 
             // Act
-            string? encryptedString = _passwordService.EncryptString(plainText);
+            string? encryptedString = _encryptionService.EncryptString(plainText);
 
             // Assert
             Assert.NotEmpty(encryptedString);
@@ -66,10 +66,10 @@ namespace OnlineChat.Tests
         {
             // Arrange
             string? plainText = "Hello, World!";
-            string? encryptedString = _passwordService.EncryptString(plainText);
+            string? encryptedString = _encryptionService.EncryptString(plainText);
 
             // Act
-            string? decryptedString = _passwordService.DecryptString(encryptedString);
+            string? decryptedString = _encryptionService.DecryptString(encryptedString);
 
             // Assert
             Assert.Equal(plainText, decryptedString);

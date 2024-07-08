@@ -4,7 +4,7 @@ namespace OnlineChat.Tests
 {
     public class ChatsControllerTests
     {
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
         private readonly ChatDbContext _dbContext;
 
         public ChatsControllerTests()
@@ -15,7 +15,7 @@ namespace OnlineChat.Tests
                 .Options;
             _dbContext = new ChatDbContext(options);
 
-            // Setup PasswordService
+            // Setup EncryptionService
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.Test.json")
@@ -24,14 +24,14 @@ namespace OnlineChat.Tests
             IConfigurationSection encryptionSettings = configuration.GetSection("EncryptionSettings");
             string? key = encryptionSettings["Key"];
             string? iv = encryptionSettings["IV"];
-            _passwordService = new PasswordService(key, iv);
+            _encryptionService = new EncryptionService(key, iv);
         }
 
         [Fact]
         public async Task CreateChat_ValidModel_ReturnsCreatedAtActionResult()
         {
             // Arrange
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
             CreateChatModel model = new()
             {
                 Title = "Test Chat"
@@ -57,7 +57,7 @@ namespace OnlineChat.Tests
             _dbContext.Chats.Add(chat);
             await _dbContext.SaveChangesAsync();
 
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.GetChat(chat.ChatId);
@@ -73,7 +73,7 @@ namespace OnlineChat.Tests
         public async Task GetChat_NonExistingChatId_ReturnsNotFoundResult()
         {
             // Arrange
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.GetChat("NonExistingChatId");
@@ -89,7 +89,7 @@ namespace OnlineChat.Tests
             _dbContext.Chats.Add(new Chat { Title = "Test Chat" });
             await _dbContext.SaveChangesAsync();
 
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.GetAllChats();
@@ -108,7 +108,7 @@ namespace OnlineChat.Tests
             _dbContext.Chats.Add(chat);
             await _dbContext.SaveChangesAsync();
 
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.GetChatDetails(chat.ChatId);
@@ -128,7 +128,7 @@ namespace OnlineChat.Tests
             _dbContext.Chats.Add(chat);
             await _dbContext.SaveChangesAsync();
 
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             UpdateChatModel model = new()
             {
@@ -153,14 +153,14 @@ namespace OnlineChat.Tests
                 Title = "Test Chat",
                 Messages = new List<Message>
                 {
-                    new() { MessageId = "4bbdb5d8fb564d3", MessageText = _passwordService.EncryptString("Hello"), SenderId = "70b733415e1d4e7", ChatId = "8c24a1d871f3452", CreatedAt = DateTime.UtcNow },
-                    new() { MessageId = "9cd13253f94f466", MessageText = _passwordService.EncryptString("How are you?"), SenderId = "70b733415e1d4e7", ChatId = "8c24a1d871f3452", CreatedAt = DateTime.UtcNow }
+                    new() { MessageId = "4bbdb5d8fb564d3", MessageText = _encryptionService.EncryptString("Hello"), SenderId = "70b733415e1d4e7", ChatId = "8c24a1d871f3452", CreatedAt = DateTime.UtcNow },
+                    new() { MessageId = "9cd13253f94f466", MessageText = _encryptionService.EncryptString("How are you?"), SenderId = "70b733415e1d4e7", ChatId = "8c24a1d871f3452", CreatedAt = DateTime.UtcNow }
                 }
             };
             _dbContext.Chats.Add(chat);
             await _dbContext.SaveChangesAsync();
 
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.GetMessages(chat.ChatId);
@@ -179,7 +179,7 @@ namespace OnlineChat.Tests
         public async Task GetMessages_NonExistingChatId_ReturnsNotFoundResult()
         {
             // Arrange
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.GetMessages("NonExistingChatId");
@@ -193,14 +193,14 @@ namespace OnlineChat.Tests
         {
             // Arrange
             Chat chat = new() { ChatId = "8c24a1d871f3452", Title = "Test Chat" };
-            Message message1 = new() { ChatId = chat.ChatId, MessageText = _passwordService.EncryptString("Hello"), CreatedAt = DateTime.UtcNow };
-            Message message2 = new() { ChatId = chat.ChatId, MessageText = _passwordService.EncryptString("How are you?"), CreatedAt = DateTime.UtcNow };
+            Message message1 = new() { ChatId = chat.ChatId, MessageText = _encryptionService.EncryptString("Hello"), CreatedAt = DateTime.UtcNow };
+            Message message2 = new() { ChatId = chat.ChatId, MessageText = _encryptionService.EncryptString("How are you?"), CreatedAt = DateTime.UtcNow };
 
             _dbContext.Chats.Add(chat);
             _dbContext.Messages.AddRange(message1, message2);
             await _dbContext.SaveChangesAsync();
 
-            ChatsController controller = new(_dbContext, _passwordService);
+            ChatsController controller = new(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.ClearMessages(chat.ChatId);
@@ -221,7 +221,7 @@ namespace OnlineChat.Tests
         public async Task ClearMessages_NonExistingChatId_ReturnsNotFoundResult()
         {
             // Arrange
-            ChatsController controller = new ChatsController(_dbContext, _passwordService);
+            ChatsController controller = new ChatsController(_dbContext, _encryptionService);
 
             // Act
             IActionResult result = await controller.ClearMessages("NonExistingChatId");

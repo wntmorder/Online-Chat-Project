@@ -5,7 +5,7 @@ namespace OnlineChat.Tests
     public class MessagesControllerTests : IDisposable
     {
         private readonly ChatDbContext _dbContext;
-        private readonly PasswordService _passwordService;
+        private readonly EncryptionService _encryptionService;
 
         public MessagesControllerTests()
         {
@@ -23,13 +23,13 @@ namespace OnlineChat.Tests
             string? key = encryptionSettings["Key"];
             string? iv = encryptionSettings["IV"];
 
-            _passwordService = new PasswordService(key, iv);
+            _encryptionService = new EncryptionService(key, iv);
         }
 
         [Fact]
         public async Task CreateMessage_ValidModel_ReturnsCreatedAtActionResult()
         {
-            MessagesController controller = new(_dbContext, _passwordService);
+            MessagesController controller = new(_dbContext, _encryptionService);
 
             CreateMessageModel model = new()
             {
@@ -46,12 +46,12 @@ namespace OnlineChat.Tests
         [Fact]
         public async Task GetMessage_ValidId_ReturnsOkResult()
         {
-            MessagesController controller = new(_dbContext, _passwordService);
+            MessagesController controller = new(_dbContext, _encryptionService);
 
             Message message = new()
             {
                 MessageId = "9cd13253f94f466",
-                MessageText = _passwordService.EncryptString("Hello, world!"),
+                MessageText = _encryptionService.EncryptString("Hello, world!"),
                 SenderId = "70b733415e1d4e7",
                 ChatId = "8c24a1d871f3452",
                 CreatedAt = DateTime.UtcNow
@@ -68,12 +68,12 @@ namespace OnlineChat.Tests
         [Fact]
         public async Task UpdateMessage_ValidId_ReturnsOkResult()
         {
-            MessagesController controller = new(_dbContext, _passwordService);
+            MessagesController controller = new(_dbContext, _encryptionService);
 
             Message message = new()
             {
                 MessageId = "9cd13253f94f466",
-                MessageText = _passwordService.EncryptString("Old text"),
+                MessageText = _encryptionService.EncryptString("Old text"),
                 SenderId = "70b733415e1d4e7",
                 ChatId = "8c24a1d871f3452",
                 CreatedAt = DateTime.UtcNow
@@ -90,19 +90,19 @@ namespace OnlineChat.Tests
             IActionResult result = await controller.UpdateMessage("9cd13253f94f466", model);
 
             Assert.IsType<OkObjectResult>(result);
-            Assert.Equal("New text", _passwordService.DecryptString(message.MessageText));
+            Assert.Equal("New text", _encryptionService.DecryptString(message.MessageText));
         }
 
 
         [Fact]
         public async Task DeleteMessage_ValidId_ReturnsNoContent()
         {
-            MessagesController controller = new(_dbContext, _passwordService);
+            MessagesController controller = new(_dbContext, _encryptionService);
 
             Message message = new()
             {
                 MessageId = "9cd13253f94f466",
-                MessageText = _passwordService.EncryptString("Hello, world!"),
+                MessageText = _encryptionService.EncryptString("Hello, world!"),
                 SenderId = "70b733415e1d4e7",
                 ChatId = "8c24a1d871f3452",
                 CreatedAt = DateTime.UtcNow
