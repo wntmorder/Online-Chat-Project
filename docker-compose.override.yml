@@ -3,8 +3,8 @@ version: '3.4'
 services:
   onlinechat:
     build:
-      context: .
-      dockerfile: ./OnlineChat/Dockerfile
+      context: ./OnlineChat
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -17,3 +17,18 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Username=postgres;Password=root;Database=onlinechat
     depends_on:
       - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: onlinechat.database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: onlinechat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

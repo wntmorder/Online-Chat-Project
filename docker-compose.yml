@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   onlinechat:
+    container_name: onlinechat.api
     build:
       context: ./OnlineChat
       dockerfile: Dockerfile

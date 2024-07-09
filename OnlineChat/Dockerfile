@@ -10,7 +10,6 @@ WORKDIR /src
 COPY ["OnlineChat.csproj", "./"]
 RUN dotnet restore "OnlineChat.csproj"
 COPY . .
-WORKDIR "/src"
 RUN dotnet build "OnlineChat.csproj" -c Release -o /app/build
 
 FROM build AS publish
